@@ -1,0 +1,20 @@
+<div *ngFor="let todo of todos$ | async" [class.completed]="todo.isCompleted" >
+  <div class="item">
+    <mat-checkbox *ngIf="!todo.isCompleted" (change)="markAsCompleted(todo.id)" [checked]="todo.isCompleted" [disableRipple]="true"
+                  (click)="$event.preventDefault()"></mat-checkbox>
+    <mat-checkbox *ngIf="todo.isCompleted" (change)="markAsUnfinished(todo.id)" [checked]="todo.isCompleted" [disableRipple]="true"
+                  (click)="$event.preventDefault()"></mat-checkbox>
+    <span [matTooltip]="todo.description || ''" matTooltipPosition="above" [class.highlight]="isHighPriorityAndDueSoon(todo)">
+      {{ todo.summary }}
+    </span>
+    <mat-icon *ngIf="!todo.isCompleted" (click)="editTodo(todo)">edit</mat-icon>
+    <mat-icon *ngIf="!todo.isCompleted" (click)="openPopConfirm(todo.id)">delete</mat-icon>
+  </div>
+</div>
+
+<div class="button-wrap">
+  <button color="accent" (click)="openTodoFormDialog()">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
+

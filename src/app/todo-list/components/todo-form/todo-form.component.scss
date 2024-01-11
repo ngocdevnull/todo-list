@@ -1,0 +1,22 @@
+.wrap {
+  padding: 10px 25px;
+}
+
+.form-control {
+  box-sizing: border-box;
+  width: 90%;
+  height: 32px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-left: 20px;
+}
+
+.button-wrap {
+  padding: 15px 25px;
+  text-align: right;
+
+  button {
+    height: 40px;
+  }
+}

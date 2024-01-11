@@ -1,0 +1,27 @@
+.item {
+  padding: 10px;
+  border: 1px solid #ccc;
+  width: 60vw;
+  margin: auto;
+  display: flex;
+  align-items: center;
+}
+
+.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.highlight {
+  font-weight: bold;
+  font-style: italic;
+  color: red;
+}
+
+button {
+  margin-top: 10px;
+}
+
+.button-wrap {
+  text-align: center;
+}

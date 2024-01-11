@@ -1,0 +1,37 @@
+<form [formGroup]="form" (submit)="onFormSubmit()">
+  <div class="wrap">
+    <div>
+      <label for="summary">Summary:</label>
+    </div>
+    <input formControlName="summary" id="summary" class="form-control"/>
+  </div>
+
+  <div class="wrap">
+    <div>
+      <label for="description">Description:</label>
+    </div>
+    <textarea formControlName="description" id="description" class="form-control"></textarea>
+  </div>
+
+  <div class="wrap">
+    <div>
+      <label for="completeByDate">Complete By Date:</label>
+    </div>
+    <input formControlName="completeByDate" id="completeByDate" type="date" class="form-control"/>
+  </div>
+
+  <div class="wrap">
+    <div>
+      <label for="priority">Priority:</label>
+    </div>
+    <select formControlName="priority" id="priority" class="form-control">
+      <option value="1">Low</option>
+      <option value="2">Medium</option>
+      <option value="3">High</option>
+    </select>
+  </div>
+
+  <div class="button-wrap">
+    <button type="submit"><span *ngIf="isEditMode">Edit</span> <span *ngIf="!isEditMode">Create</span></button>
+  </div>
+</form>
