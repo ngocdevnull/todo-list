@@ -1,20 +1,57 @@
-<div *ngFor="let todo of todos$ | async" [class.completed]="todo.isCompleted" >
-  <div class="item">
-    <mat-checkbox *ngIf="!todo.isCompleted" (change)="markAsCompleted(todo.id)" [checked]="todo.isCompleted" [disableRipple]="true"
-                  (click)="$event.preventDefault()"></mat-checkbox>
-    <mat-checkbox *ngIf="todo.isCompleted" (change)="markAsUnfinished(todo.id)" [checked]="todo.isCompleted" [disableRipple]="true"
-                  (click)="$event.preventDefault()"></mat-checkbox>
-    <span [matTooltip]="todo.description || ''" matTooltipPosition="above" [class.highlight]="isHighPriorityAndDueSoon(todo)">
-      {{ todo.summary }}
-    </span>
-    <mat-icon *ngIf="!todo.isCompleted" (click)="editTodo(todo)">edit</mat-icon>
-    <mat-icon *ngIf="!todo.isCompleted" (click)="openPopConfirm(todo.id)">delete</mat-icon>
-  </div>
-</div>
-
 <div class="button-wrap">
-  <button color="accent" (click)="openTodoFormDialog()">
+  <h1>Todo List</h1>
+  <button mat-mini-fab color="primary" (click)="openTodoFormDialog()">
     <mat-icon>add</mat-icon>
   </button>
 </div>
 
+@defer (on viewport) {
+  @for (todo of (todos$ | async)!; track todo) {
+    <div class="item" [class.completed]="todo.isCompleted">
+      <div class="summary-wrap">
+        @if (todo.isCompleted) {
+          <mat-checkbox
+            [disabled]="(isDisabled$ | async) || false"
+            (change)="markAsUnfinished(todo.id)"
+            [checked]="todo.isCompleted"
+            (click)="$event.preventDefault()"
+          ></mat-checkbox>
+        } @else {
+          <mat-checkbox
+            [disabled]="(isDisabled$ | async) || false"
+            (change)="markAsCompleted(todo.id)"
+            [checked]="todo.isCompleted"
+            (click)="$event.preventDefault()"
+          ></mat-checkbox>
+        }
+
+        <span
+          [matTooltip]="todo.description || ''"
+          matTooltipPosition="above"
+          [class.highlight]="todo.id | highestPriorityPipe: (todos$ | async)!"
+        >
+          {{ todo.summary }}
+        </span>
+      </div>
+
+      @if (!todo.isCompleted) {
+        <div class="priority-wrap">
+          <span>{{ todo.priority | priorityPipe }}</span>
+        </div>
+      }
+
+      @if (!todo.isCompleted) {
+        <div>
+          <mat-icon (click)="editTodo(todo)">edit</mat-icon>
+          <mat-icon [ngClass]="{ disable: isDisabled$ | async }" class="delete-icon" (click)="openPopConfirm(todo.id)">delete</mat-icon>
+        </div>
+      }
+    </div>
+  }
+} @placeholder (minimum 2000ms) {
+  <div class="loading">Loading ...</div>
+}
+
+@if (!(todos$ | async)?.length) {
+  <div class="loading">Start with Todo App</div>
+}

@@ -1,10 +1,11 @@
 .item {
-  padding: 10px;
-  border: 1px solid #ccc;
-  width: 60vw;
-  margin: auto;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid #ccc;
+  width: 50vw;
+  margin: auto;
 }
 
 .completed {
@@ -18,10 +19,45 @@
   color: red;
 }
 
-button {
-  margin-top: 10px;
+.button-wrap {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
-.button-wrap {
+.priority-wrap {
+  width: 50px;
+  text-align: left;
+}
+
+.summary-wrap {
+  width: 270px;
+}
+
+.loading {
   text-align: center;
+}
+
+.disable:hover {
+  cursor: not-allowed;
+}
+.disable:active {
+  pointer-events: none;
+}
+.delete-icon.disable {
+  filter: opacity(0.5);
+}
+
+@media screen and (max-width: 980px) {
+  .item {
+    width: 60vw;
+  }
+}
+
+@media screen and (max-width: 450px) {
+  .item {
+    width: 90vw;
+  }
 }

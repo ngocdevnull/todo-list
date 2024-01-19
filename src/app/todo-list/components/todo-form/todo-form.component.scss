@@ -1,5 +1,14 @@
+form {
+  padding-top: 30px;
+}
+
 .wrap {
   padding: 10px 25px;
+  display: flex;
+
+  label {
+    flex-basis: 200px;
+  }
 }
 
 .form-control {

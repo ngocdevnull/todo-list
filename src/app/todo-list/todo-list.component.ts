@@ -1,11 +1,12 @@
-import {Component, OnInit} from '@angular/core';
-import {TodoService} from './service/todo.service';
-import {Todo} from "./model/todo.model";
-import {MatDialog} from "@angular/material/dialog";
-import {TodoFormComponent} from "./components/todo-form/todo-form.component";
-import {ConfirmDialogComponent} from "./components/confirm-dialog/confirm-dialog.component";
-import {EMPTY, Observable, ReplaySubject} from "rxjs";
-import {map, switchMap} from 'rxjs/operators';
+import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { BehaviorSubject, EMPTY, Observable, ReplaySubject, shareReplay, take, tap } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+
+import { TodoService } from './service/todo.service';
+import { Todo } from './model/todo.model';
+import { TodoFormComponent } from './components/todo-form/todo-form.component';
+import { ConfirmDialogComponent } from '../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-todo-list',
@@ -13,75 +14,110 @@ import {map, switchMap} from 'rxjs/operators';
   styleUrls: ['./todo-list.component.scss'],
 })
 export class TodoListComponent implements OnInit {
-  public todos$: Observable<Todo[]> | undefined
-  public refetchApiTrigger$ = new ReplaySubject<void>(1);
+  private readonly innerDisabled$ = new BehaviorSubject<boolean>(false);
 
-  public constructor(private todoService: TodoService, private dialog: MatDialog) {}
+  public todos$!: Observable<Todo[]>;
+  public refetchApiTrigger$ = new ReplaySubject<void>(1);
+  public isDisabled$: Observable<boolean> = this.innerDisabled$.asObservable();
+
+  public constructor(
+    private todoService: TodoService,
+    private dialog: MatDialog,
+  ) {}
 
   public ngOnInit(): void {
-    this.todos$ = this.refetchApiTrigger$.pipe(switchMap(() => this.todoService.getTodos()), map(data => data))
+    this.todos$ = this.refetchApiTrigger$.pipe(
+      switchMap(() => this.todoService.getTodos()),
+      map((data) => data),
+      shareReplay(1),
+      tap(() => {
+        this.innerDisabled$.next(false);
+      }),
+    );
     this.refetchApiTrigger$.next();
   }
 
   public markAsCompleted(todoId: number): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '60vw',
-      data: {text: 'mark as finish'}
+      width: '30vw',
+      data: { text: 'mark as finish' },
     });
 
-    dialogRef.afterClosed().pipe(switchMap((result) =>
-      result ? this.todoService.markAsCompleted(todoId) : EMPTY
-    )).subscribe({next: () => this.refetchApiTrigger$.next()})
+    dialogRef
+      .afterClosed()
+      .pipe(
+        switchMap((result) => {
+          this.innerDisabled$.next(result);
+          return result ? this.todoService.markAsCompleted(todoId) : EMPTY;
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.refetchApiTrigger$.next();
+        },
+      });
   }
 
   public markAsUnfinished(todoId: number): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '60vw',
-      data: {text: 'mark as unfinished'}
+      width: '30vw',
+      data: { text: 'mark as unfinished' },
     });
 
-    dialogRef.afterClosed().pipe(switchMap((result) =>
-      result ? this.todoService.markAsUnfinished(todoId) : EMPTY
-    )).subscribe({next: () => this.refetchApiTrigger$.next()})
-  }
-
-  public deleteTodo(todoId: number): void {
-    this.todoService.deleteTodo(todoId).subscribe()
-  }
-
-  public isHighPriorityAndDueSoon(todo: Todo): boolean {
-    const isUnfinished = !todo.isCompleted;
-    const oneDayAhead = new Date();
-    oneDayAhead.setDate(new Date().getDate() + 1);
-    const isHighPriority = todo.priority === 3;
-
-    return isUnfinished && isHighPriority
+    dialogRef
+      .afterClosed()
+      .pipe(
+        switchMap((result) => {
+          this.innerDisabled$.next(result);
+          return result ? this.todoService.markAsUnfinished(todoId) : EMPTY;
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.refetchApiTrigger$.next();
+        },
+      });
   }
 
   public openTodoFormDialog(): void {
-    this.dialog.open(TodoFormComponent, {
-      width: '70vw',
+    const dialogRef = this.dialog.open(TodoFormComponent, {
+      width: '40vw',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refetchApiTrigger$.next();
+      }
     });
   }
 
   public editTodo(todo: Todo): void {
-    this.dialog.open(TodoFormComponent, {
-      width: '70vw',
-      data: {todo}
+    const dialogRef = this.dialog.open(TodoFormComponent, {
+      width: '40vw',
+      data: { todo },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.refetchApiTrigger$.next();
+      }
     });
   }
 
   public openPopConfirm(todoId: number): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '60vw',
-      data: {text: 'delete'}
+      width: '30vw',
+      data: { text: 'delete' },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.deleteTodo(todoId)
-        this.refetchApiTrigger$.next();
-      }
-    });
+    dialogRef
+      .afterClosed()
+      .pipe(
+        switchMap((result) => {
+          this.innerDisabled$.next(result);
+          return result ? this.todoService.deleteTodo(todoId) : EMPTY;
+        }),
+      )
+      .subscribe({ next: () => this.refetchApiTrigger$.next() });
   }
 }

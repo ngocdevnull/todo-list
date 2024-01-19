@@ -1,9 +1,12 @@
-import {Component, Inject} from '@angular/core';
-import {FormControl, FormGroup, Validators} from "@angular/forms";
-import {TodoService} from "../../service/todo.service";
-import {MatSnackBar} from "@angular/material/snack-bar";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {Todo} from "../../model/todo.model";
+import { Component, Inject } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+
+import { Todo } from '../../model/todo.model';
+import { Priority } from '../../model/priority.model';
+import { TodoService } from '../../service/todo.service';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-todo-form',
@@ -11,25 +14,32 @@ import {Todo} from "../../model/todo.model";
   styleUrls: ['./todo-form.component.scss'],
 })
 export class TodoFormComponent {
+  private readonly innerDisabled$ = new BehaviorSubject<boolean>(false);
+
   public form: FormGroup = new FormGroup({
     summary: new FormControl('', [Validators.required, Validators.maxLength(30)]),
     description: new FormControl(''),
     completeByDate: new FormControl(''),
     priority: new FormControl(1, Validators.required),
   });
-
+  public priorities: Priority[] = [
+    { value: 1, label: 'low' },
+    { value: 2, label: 'medium' },
+    { value: 3, label: 'high' },
+  ];
   public isEditMode = false;
   public idEdit: number = 0;
+  public isDisabled$: Observable<boolean> = this.innerDisabled$.asObservable();
 
   public constructor(
     private todoService: TodoService,
     private snackBar: MatSnackBar,
     private dialogRef: MatDialogRef<TodoFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { todo: Todo },) {
-
+    @Inject(MAT_DIALOG_DATA) public data: { todo: Todo },
+  ) {
     if (data && data.todo) {
       this.isEditMode = true;
-      this.idEdit = data.todo.id
+      this.idEdit = data.todo.id;
       this.setFormValues(data.todo);
     }
   }
@@ -38,8 +48,8 @@ export class TodoFormComponent {
     this.form.patchValue({
       summary: todo.summary,
       description: todo.description,
-      completeByDate: todo.completeByDate?.toISOString().substring(0, 10),
-      priority: todo.priority.toString(),
+      completeByDate: new Date(todo.completeByDate!).toISOString().substring(0, 10),
+      priority: todo.priority,
     });
   }
 
@@ -59,42 +69,46 @@ export class TodoFormComponent {
         completeByDate: completeByDate ? new Date(completeByDate) : this.setDefaultCompleteByDate(),
       };
 
+      this.innerDisabled$.next(true);
+
       if (this.isEditMode) {
         this.todoService.editTodo(this.idEdit, data).subscribe({
           next: () => {
-            this.openSnackBar('Edit successfully', 'success')
-            this.dialogRef.close(true)
-            this.resetNewTodoForm();
+            this.openSnackBar('Edit successfully', 'success');
+            this.dialogRef.close(true);
+            this.innerDisabled$.next(false);
           },
           error: () => {
-            this.openSnackBar('Edit failed', 'error')
-            this.dialogRef.close()
-          }
-        })
+            this.openSnackBar('Edit failed', 'error');
+            this.dialogRef.close();
+            this.innerDisabled$.next(false);
+          },
+        });
       } else {
         this.todoService.createTodo(data).subscribe({
-            next: () => {
-              this.openSnackBar('Todo created successfully', 'success')
-              this.dialogRef.close(true)
-              this.resetNewTodoForm();
-            },
-            error: () => {
-              this.openSnackBar('Failed to create todo', 'error')
-              this.dialogRef.close()
-            }
+          next: () => {
+            this.openSnackBar('Todo created successfully', 'success');
+            this.dialogRef.close(true);
+            this.resetNewTodoForm();
+            this.innerDisabled$.next(false);
           },
-        );
+          error: () => {
+            this.openSnackBar('Failed to create todo', 'error');
+            this.dialogRef.close();
+            this.innerDisabled$.next(false);
+          },
+        });
       }
     } else {
-      this.openSnackBar('Form is not valid', 'error')
+      this.openSnackBar('Summary is required', 'error');
     }
   }
 
   private openSnackBar(mes: string, type: string): void {
     this.snackBar.open(mes, 'Close', {
       duration: 3000,
-      panelClass: `${type}-toast`
-    })
+      panelClass: `${type}-toast`,
+    });
   }
 
   private resetNewTodoForm(): void {
@@ -111,5 +125,4 @@ export class TodoFormComponent {
     today.setDate(today.getDate() + 3);
     return today;
   }
-
 }
