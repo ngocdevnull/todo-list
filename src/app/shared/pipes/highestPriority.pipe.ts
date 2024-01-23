@@ -12,10 +12,14 @@ export class HighestPriorityPipe implements PipeTransform {
     if (!incompleteTodos?.length) {
       return false;
     }
-    const maxPriority = Math.max(...incompleteTodos.map((t) => t.priority));
-    const highPriorityIncompleteTodos: Todo[] = incompleteTodos.filter((todo) => todo.priority === maxPriority);
-    return (
-      highPriorityIncompleteTodos.sort((a, b) => new Date(a.completeByDate!).getTime() - new Date(b.completeByDate!).getTime())[0].id === id
+    let result: Todo[] = [];
+    const itemsSoonestDeadline = incompleteTodos.sort(
+      (a, b) => new Date(a.completeByDate!).getTime() - new Date(b.completeByDate!).getTime(),
     );
+    const itemsHighestPriority = incompleteTodos.filter((i) => i.priority === 3);
+    result.push(itemsSoonestDeadline[0]);
+    result = [...result, ...itemsHighestPriority];
+    const resultIds: number[] = result.map((i) => i.id);
+    return resultIds.includes(id);
   }
 }

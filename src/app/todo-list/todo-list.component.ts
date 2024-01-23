@@ -14,11 +14,13 @@ import { ConfirmDialogComponent } from '../shared/components/confirm-dialog/conf
   styleUrls: ['./todo-list.component.scss'],
 })
 export class TodoListComponent implements OnInit {
-  private readonly innerDisabled$ = new BehaviorSubject<boolean>(false);
+  private readonly innerDisabled$ = new BehaviorSubject<boolean>(true);
+  private readonly innerLoading$ = new BehaviorSubject<boolean>(false);
 
   public todos$!: Observable<Todo[]>;
   public refetchApiTrigger$ = new ReplaySubject<void>(1);
   public isDisabled$: Observable<boolean> = this.innerDisabled$.asObservable();
+  public isLoading$: Observable<boolean> = this.innerLoading$.asObservable();
 
   public constructor(
     private todoService: TodoService,
@@ -32,6 +34,7 @@ export class TodoListComponent implements OnInit {
       shareReplay(1),
       tap(() => {
         this.innerDisabled$.next(false);
+        this.innerLoading$.next(false);
       }),
     );
     this.refetchApiTrigger$.next();
@@ -39,7 +42,6 @@ export class TodoListComponent implements OnInit {
 
   public markAsCompleted(todoId: number): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '30vw',
       data: { text: 'mark as finish' },
     });
 
@@ -47,7 +49,7 @@ export class TodoListComponent implements OnInit {
       .afterClosed()
       .pipe(
         switchMap((result) => {
-          this.innerDisabled$.next(result);
+          this.innerLoading$.next(result);
           return result ? this.todoService.markAsCompleted(todoId) : EMPTY;
         }),
       )
@@ -60,7 +62,6 @@ export class TodoListComponent implements OnInit {
 
   public markAsUnfinished(todoId: number): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '30vw',
       data: { text: 'mark as unfinished' },
     });
 
@@ -68,7 +69,7 @@ export class TodoListComponent implements OnInit {
       .afterClosed()
       .pipe(
         switchMap((result) => {
-          this.innerDisabled$.next(result);
+          this.innerLoading$.next(result);
           return result ? this.todoService.markAsUnfinished(todoId) : EMPTY;
         }),
       )
@@ -80,9 +81,7 @@ export class TodoListComponent implements OnInit {
   }
 
   public openTodoFormDialog(): void {
-    const dialogRef = this.dialog.open(TodoFormComponent, {
-      width: '40vw',
-    });
+    const dialogRef = this.dialog.open(TodoFormComponent, {});
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
@@ -93,7 +92,6 @@ export class TodoListComponent implements OnInit {
 
   public editTodo(todo: Todo): void {
     const dialogRef = this.dialog.open(TodoFormComponent, {
-      width: '40vw',
       data: { todo },
     });
 
@@ -106,7 +104,6 @@ export class TodoListComponent implements OnInit {
 
   public openPopConfirm(todoId: number): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '30vw',
       data: { text: 'delete' },
     });
 
@@ -114,7 +111,7 @@ export class TodoListComponent implements OnInit {
       .afterClosed()
       .pipe(
         switchMap((result) => {
-          this.innerDisabled$.next(result);
+          this.innerLoading$.next(result);
           return result ? this.todoService.deleteTodo(todoId) : EMPTY;
         }),
       )

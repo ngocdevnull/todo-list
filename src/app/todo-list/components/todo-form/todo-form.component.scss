@@ -1,5 +1,6 @@
 form {
   padding-top: 30px;
+  width: 40vw;
 }
 
 .wrap {
@@ -27,5 +28,17 @@ form {
 
   button {
     height: 40px;
+  }
+}
+
+@media screen and (max-width: 980px) {
+  form {
+    width: 70vw;
+  }
+}
+
+@media screen and (max-width: 475px) {
+  form {
+    width: unset;
   }
 }

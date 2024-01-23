@@ -4,7 +4,7 @@
   justify-content: space-between;
   padding: 10px;
   border: 1px solid #ccc;
-  width: 50vw;
+  width: 60vw;
   margin: auto;
 }
 
@@ -33,7 +33,11 @@
 }
 
 .summary-wrap {
-  width: 270px;
+  width: 45%;
+}
+
+.date-wrap {
+  width: 15%;
 }
 
 .loading {
@@ -51,12 +55,6 @@
 }
 
 @media screen and (max-width: 980px) {
-  .item {
-    width: 60vw;
-  }
-}
-
-@media screen and (max-width: 450px) {
   .item {
     width: 90vw;
   }

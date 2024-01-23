@@ -14,7 +14,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
   styleUrls: ['./todo-form.component.scss'],
 })
 export class TodoFormComponent {
-  private readonly innerDisabled$ = new BehaviorSubject<boolean>(false);
+  private readonly innerLoading$ = new BehaviorSubject<boolean>(false);
 
   public form: FormGroup = new FormGroup({
     summary: new FormControl('', [Validators.required, Validators.maxLength(30)]),
@@ -29,7 +29,7 @@ export class TodoFormComponent {
   ];
   public isEditMode = false;
   public idEdit: number = 0;
-  public isDisabled$: Observable<boolean> = this.innerDisabled$.asObservable();
+  public isLoading$: Observable<boolean> = this.innerLoading$.asObservable();
 
   public constructor(
     private todoService: TodoService,
@@ -66,22 +66,25 @@ export class TodoFormComponent {
         description,
         priority,
         isCompleted: false,
-        completeByDate: completeByDate ? new Date(completeByDate) : this.setDefaultCompleteByDate(),
+        completeByDate:
+          completeByDate && new Date(completeByDate).getDate() >= new Date().getDate()
+            ? new Date(completeByDate)
+            : this.setDefaultCompleteByDate(),
       };
 
-      this.innerDisabled$.next(true);
+      this.innerLoading$.next(true);
 
       if (this.isEditMode) {
         this.todoService.editTodo(this.idEdit, data).subscribe({
           next: () => {
             this.openSnackBar('Edit successfully', 'success');
             this.dialogRef.close(true);
-            this.innerDisabled$.next(false);
+            this.innerLoading$.next(false);
           },
           error: () => {
             this.openSnackBar('Edit failed', 'error');
             this.dialogRef.close();
-            this.innerDisabled$.next(false);
+            this.innerLoading$.next(false);
           },
         });
       } else {
@@ -90,12 +93,11 @@ export class TodoFormComponent {
             this.openSnackBar('Todo created successfully', 'success');
             this.dialogRef.close(true);
             this.resetNewTodoForm();
-            this.innerDisabled$.next(false);
+            this.innerLoading$.next(false);
           },
           error: () => {
             this.openSnackBar('Failed to create todo', 'error');
-            this.dialogRef.close();
-            this.innerDisabled$.next(false);
+            this.innerLoading$.next(false);
           },
         });
       }

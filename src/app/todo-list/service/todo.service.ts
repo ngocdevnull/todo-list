@@ -2,10 +2,22 @@ import { delay, Observable, of } from 'rxjs';
 
 import { Todo } from '../model/todo.model';
 import { getTodosStorage, setTodosStorage } from '../../shared/storage/todo.storage';
+import { Injectable, OnInit } from '@angular/core';
+import { ReloadTrackingService } from './reload-tracking.service';
 
+@Injectable({
+  providedIn: 'root',
+})
 export class TodoService {
+  public constructor(private reloadTrackingService: ReloadTrackingService) {}
+
   public getTodos(): Observable<Todo[]> {
-    const todos = getTodosStorage();
+    let todos = getTodosStorage();
+    if (this.reloadTrackingService.isReloaded()) {
+      todos = todos.filter((i) => !i.isCompleted);
+      setTodosStorage(todos);
+      this.reloadTrackingService.resetReloadStatus();
+    }
     todos.sort((a, b) => {
       return b.priority - a.priority;
     });

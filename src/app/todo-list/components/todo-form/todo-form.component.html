@@ -24,7 +24,7 @@
   </div>
 
   <div class="button-wrap">
-    <button mat-button color="primary" type="submit" [disabled]="isDisabled$ | async">
+    <button mat-button color="primary" type="submit">
       @if (isEditMode) {
         <span>Edit</span>
       } @else {
@@ -33,3 +33,5 @@
     </button>
   </div>
 </form>
+
+<app-loader [show]="isLoading$ | async"></app-loader>

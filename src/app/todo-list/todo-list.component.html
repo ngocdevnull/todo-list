@@ -1,6 +1,6 @@
 <div class="button-wrap">
   <h1>Todo List</h1>
-  <button mat-mini-fab color="primary" (click)="openTodoFormDialog()">
+  <button [disabled]="isDisabled$ | async" mat-mini-fab color="primary" (click)="openTodoFormDialog()">
     <mat-icon>add</mat-icon>
   </button>
 </div>
@@ -10,19 +10,9 @@
     <div class="item" [class.completed]="todo.isCompleted">
       <div class="summary-wrap">
         @if (todo.isCompleted) {
-          <mat-checkbox
-            [disabled]="(isDisabled$ | async) || false"
-            (change)="markAsUnfinished(todo.id)"
-            [checked]="todo.isCompleted"
-            (click)="$event.preventDefault()"
-          ></mat-checkbox>
+          <mat-checkbox (change)="markAsUnfinished(todo.id)" [checked]="todo.isCompleted" (click)="$event.preventDefault()"></mat-checkbox>
         } @else {
-          <mat-checkbox
-            [disabled]="(isDisabled$ | async) || false"
-            (change)="markAsCompleted(todo.id)"
-            [checked]="todo.isCompleted"
-            (click)="$event.preventDefault()"
-          ></mat-checkbox>
+          <mat-checkbox (change)="markAsCompleted(todo.id)" [checked]="todo.isCompleted" (click)="$event.preventDefault()"></mat-checkbox>
         }
 
         <span
@@ -38,12 +28,14 @@
         <div class="priority-wrap">
           <span>{{ todo.priority | priorityPipe }}</span>
         </div>
-      }
 
-      @if (!todo.isCompleted) {
+        <div class="date-wrap">
+          <span>{{ todo.completeByDate.toString() | datePipe }}</span>
+        </div>
+
         <div>
           <mat-icon (click)="editTodo(todo)">edit</mat-icon>
-          <mat-icon [ngClass]="{ disable: isDisabled$ | async }" class="delete-icon" (click)="openPopConfirm(todo.id)">delete</mat-icon>
+          <mat-icon class="delete-icon" (click)="openPopConfirm(todo.id)">delete</mat-icon>
         </div>
       }
     </div>
@@ -55,3 +47,5 @@
 @if (!(todos$ | async)?.length) {
   <div class="loading">Start with Todo App</div>
 }
+
+<app-loader [show]="isLoading$ | async"></app-loader>

@@ -14,6 +14,8 @@ import { TodoFormComponent } from './components/todo-form/todo-form.component';
 import { MatButtonModule } from '@angular/material/button';
 import { PriorityPipe } from '../shared/pipes/priority.pipe';
 import { HighestPriorityPipe } from '../shared/pipes/highestPriority.pipe';
+import { DatePipe } from '../shared/pipes/date.pipe';
+import { LoaderComponent } from '../shared/components/loader/loader.component';
 
 @NgModule({
   declarations: [TodoFormComponent, ConfirmDialogComponent, TodoListComponent],
@@ -30,6 +32,8 @@ import { HighestPriorityPipe } from '../shared/pipes/highestPriority.pipe';
     ReactiveFormsModule,
     PriorityPipe,
     HighestPriorityPipe,
+    DatePipe,
+    LoaderComponent,
   ],
   providers: [TodoService],
 })
