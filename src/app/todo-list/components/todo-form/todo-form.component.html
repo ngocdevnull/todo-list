@@ -1,37 +1,33 @@
 <form [formGroup]="form" (submit)="onFormSubmit()">
-  <div class="wrap">
-    <label for="summary">Summary:</label>
-    <input formControlName="summary" id="summary" class="form-control" maxlength="30" />
-  </div>
+  <mat-form-field>
+    <mat-label>Summary</mat-label>
+    <input matInput formControlName="summary" class="form-control" maxlength="30" />
+  </mat-form-field>
 
-  <div class="wrap">
-    <label for="description">Description:</label>
-    <textarea formControlName="description" id="description" class="form-control"></textarea>
-  </div>
+  <mat-form-field>
+    <mat-label>Description:</mat-label>
+    <input matInput formControlName="description" class="form-control" />
+  </mat-form-field>
 
-  <div class="wrap">
-    <label for="completeByDate">Complete By Date:</label>
-    <input formControlName="completeByDate" id="completeByDate" type="date" class="form-control" />
-  </div>
+  <mat-form-field>
+    <mat-label>Complete by Date:</mat-label>
+    <input matInput [matDatepicker]="picker" formControlName="completeByDate" class="form-control" [matDatepickerFilter]="dateFilter" />
+    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
 
-  <div class="wrap">
-    <label for="priority">Priority:</label>
-    <select formControlName="priority" id="priority" class="form-control">
+  <mat-form-field>
+    <mat-label>Priority</mat-label>
+    <mat-select formControlName="priority" class="form-control">
       @for (priority of priorities; track priority) {
-        <option [value]="priority.value">{{ priority.label }}</option>
+        <mat-option [value]="priority.value">{{ priority.label }}</mat-option>
       }
-    </select>
-  </div>
+    </mat-select>
+  </mat-form-field>
 
   <div class="button-wrap">
     <button mat-button color="primary" type="submit">
-      @if (isEditMode) {
-        <span>Edit</span>
-      } @else {
-        <span>Create</span>
-      }
+      <span>{{ submitButtonText }}</span>
     </button>
   </div>
 </form>
-
-<app-loader [show]="isLoading$ | async"></app-loader>

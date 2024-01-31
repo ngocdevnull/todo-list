@@ -1,6 +1,6 @@
 <div class="button-wrap">
   <h1>Todo List</h1>
-  <button [disabled]="isDisabled$ | async" mat-mini-fab color="primary" (click)="openTodoFormDialog()">
+  <button [disabled]="isDisabled$ | async" mat-mini-fab color="primary" (click)="createTodo()">
     <mat-icon>add</mat-icon>
   </button>
 </div>
@@ -15,11 +15,7 @@
           <mat-checkbox (change)="markAsCompleted(todo.id)" [checked]="todo.isCompleted" (click)="$event.preventDefault()"></mat-checkbox>
         }
 
-        <span
-          [matTooltip]="todo.description || ''"
-          matTooltipPosition="above"
-          [class.highlight]="todo.id | highestPriorityPipe: (todos$ | async)!"
-        >
+        <span [matTooltip]="todo.description || ''" matTooltipPosition="above" [class.highlight]="todo?.isHighlight">
           {{ todo.summary }}
         </span>
       </div>
@@ -30,7 +26,7 @@
         </div>
 
         <div class="date-wrap">
-          <span>{{ todo.completeByDate.toString() | datePipe }}</span>
+          <span>{{ todo.completeByDate.toString() | date: 'dd/MM/yy' }}</span>
         </div>
 
         <div>

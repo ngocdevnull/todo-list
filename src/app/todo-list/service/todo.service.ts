@@ -2,22 +2,17 @@ import { delay, Observable, of } from 'rxjs';
 
 import { Todo } from '../model/todo.model';
 import { getTodosStorage, setTodosStorage } from '../../shared/storage/todo.storage';
-import { Injectable, OnInit } from '@angular/core';
-import { ReloadTrackingService } from './reload-tracking.service';
+import {Level} from "../../shared/enums/level.enum";
 
-@Injectable({
-  providedIn: 'root',
-})
 export class TodoService {
-  public constructor(private reloadTrackingService: ReloadTrackingService) {}
 
-  public getTodos(): Observable<Todo[]> {
+  public getTodos(isReload?: boolean): Observable<Todo[]> {
     let todos = getTodosStorage();
-    if (this.reloadTrackingService.isReloaded()) {
+    if (isReload) {
       todos = todos.filter((i) => !i.isCompleted);
       setTodosStorage(todos);
-      this.reloadTrackingService.resetReloadStatus();
     }
+    todos = [...this.determineItemsHighlight(todos)];
     todos.sort((a, b) => {
       return b.priority - a.priority;
     });
@@ -26,6 +21,14 @@ export class TodoService {
         return +a.isCompleted - +b.isCompleted;
       }),
     ).pipe(delay(2000));
+  }
+
+  public determineItemsHighlight(todos: Todo[]): Todo[] {
+    const today = new Date();
+    return todos.map((i) => {
+      const dayCompleteFromNow = this.convertMsToDay(new Date(i.completeByDate).getTime() - today.getTime());
+      return { ...i, isHighlight: i.priority === Level.HIGH && dayCompleteFromNow <= 0 };
+    });
   }
 
   public createTodo(newTodo: Todo): Observable<Todo[]> {
@@ -76,5 +79,9 @@ export class TodoService {
   private generateTodoId(): number {
     const todos = getTodosStorage();
     return Math.max(...todos.map((todo: Todo) => todo.id), 0) + 1;
+  }
+
+  private convertMsToDay(ms: number): number {
+    return Math.floor(ms / (24 * 60 * 60 * 1000));
   }
 }

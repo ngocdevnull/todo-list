@@ -13,9 +13,11 @@ import { CommonModule } from '@angular/common';
 import { TodoFormComponent } from './components/todo-form/todo-form.component';
 import { MatButtonModule } from '@angular/material/button';
 import { PriorityPipe } from '../shared/pipes/priority.pipe';
-import { HighestPriorityPipe } from '../shared/pipes/highestPriority.pipe';
-import { DatePipe } from '../shared/pipes/date.pipe';
 import { LoaderComponent } from '../shared/components/loader/loader.component';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
   declarations: [TodoFormComponent, ConfirmDialogComponent, TodoListComponent],
@@ -31,9 +33,11 @@ import { LoaderComponent } from '../shared/components/loader/loader.component';
     FormsModule,
     ReactiveFormsModule,
     PriorityPipe,
-    HighestPriorityPipe,
-    DatePipe,
     LoaderComponent,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatSelectModule,
   ],
   providers: [TodoService],
 })

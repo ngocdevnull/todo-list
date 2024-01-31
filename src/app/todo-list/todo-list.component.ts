@@ -1,19 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, EMPTY, Observable, ReplaySubject, shareReplay, take, tap } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, EMPTY, filter, Observable, ReplaySubject, shareReplay, tap } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import { TodoService } from './service/todo.service';
 import { Todo } from './model/todo.model';
 import { TodoFormComponent } from './components/todo-form/todo-form.component';
 import { ConfirmDialogComponent } from '../shared/components/confirm-dialog/confirm-dialog.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-todo-list',
   templateUrl: './todo-list.component.html',
   styleUrls: ['./todo-list.component.scss'],
 })
-export class TodoListComponent implements OnInit {
+export class TodoListComponent implements OnInit, OnDestroy {
   private readonly innerDisabled$ = new BehaviorSubject<boolean>(true);
   private readonly innerLoading$ = new BehaviorSubject<boolean>(false);
 
@@ -25,6 +26,7 @@ export class TodoListComponent implements OnInit {
   public constructor(
     private todoService: TodoService,
     private dialog: MatDialog,
+    private snackBar: MatSnackBar,
   ) {}
 
   public ngOnInit(): void {
@@ -32,12 +34,18 @@ export class TodoListComponent implements OnInit {
       switchMap(() => this.todoService.getTodos()),
       map((data) => data),
       shareReplay(1),
+      distinctUntilChanged(),
       tap(() => {
         this.innerDisabled$.next(false);
         this.innerLoading$.next(false);
       }),
     );
+    window.onbeforeunload = () => this.ngOnDestroy();
     this.refetchApiTrigger$.next();
+  }
+
+  public ngOnDestroy() {
+    this.todos$ = this.refetchApiTrigger$.pipe(switchMap(() => this.todoService.getTodos(true)));
   }
 
   public markAsCompleted(todoId: number): void {
@@ -54,9 +62,8 @@ export class TodoListComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: () => {
-          this.refetchApiTrigger$.next();
-        },
+        next: () => this.refetchApiTrigger$.next(),
+        error: () => this.innerLoading$.next(false),
       });
   }
 
@@ -74,32 +81,59 @@ export class TodoListComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: () => {
-          this.refetchApiTrigger$.next();
-        },
+        next: () => this.refetchApiTrigger$.next(),
+        error: () => this.innerLoading$.next(false),
       });
   }
 
-  public openTodoFormDialog(): void {
-    const dialogRef = this.dialog.open(TodoFormComponent, {});
+  public createTodo(): void {
+    const dialogRef = this.dialog.open(TodoFormComponent, { data: { submitButtonText: 'Create' } });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.componentInstance.formValueEmitter.subscribe((result) => {
+      this.innerLoading$.next(true);
       if (result) {
-        this.refetchApiTrigger$.next();
+        this.todoService.createTodo(result).subscribe({
+          next: () => {
+            this.openSnackBar('Todo created successfully', 'success');
+            dialogRef.close();
+            this.innerLoading$.next(false);
+          },
+          error: () => {
+            this.openSnackBar('Failed to create todo', 'error');
+            this.innerLoading$.next(false);
+          },
+        });
       }
+    });
+
+    dialogRef.afterClosed().subscribe({
+      next: () => this.refetchApiTrigger$.next(),
     });
   }
 
   public editTodo(todo: Todo): void {
     const dialogRef = this.dialog.open(TodoFormComponent, {
-      data: { todo },
+      data: { todo, submitButtonText: 'Edit' },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.componentInstance.formValueEmitter.subscribe((result) => {
+      this.innerLoading$.next(true);
       if (result) {
-        this.refetchApiTrigger$.next();
+        this.todoService.editTodo(todo.id, result).subscribe({
+          next: () => {
+            this.openSnackBar('Edit successfully', 'success');
+            dialogRef.close();
+            this.innerLoading$.next(false);
+          },
+          error: () => {
+            this.openSnackBar('Edit failed', 'error');
+            this.innerLoading$.next(false);
+          },
+        });
       }
     });
+
+    dialogRef.afterClosed().subscribe({ next: () => this.refetchApiTrigger$.next() });
   }
 
   public openPopConfirm(todoId: number): void {
@@ -115,6 +149,13 @@ export class TodoListComponent implements OnInit {
           return result ? this.todoService.deleteTodo(todoId) : EMPTY;
         }),
       )
-      .subscribe({ next: () => this.refetchApiTrigger$.next() });
+      .subscribe({ next: () => this.refetchApiTrigger$.next(), error: () => this.innerLoading$.next(false) });
+  }
+
+  private openSnackBar(mes: string, type: string): void {
+    this.snackBar.open(mes, 'Close', {
+      duration: 3000,
+      panelClass: `${type}-toast`,
+    });
   }
 }

@@ -1,23 +1,20 @@
 form {
-  padding-top: 30px;
+  padding: 30px;
   width: 40vw;
+  display: flex;
+  flex-direction: column;
 }
 
-.wrap {
-  padding: 10px 25px;
-  display: flex;
-
-  label {
-    flex-basis: 200px;
+::ng-deep mat-form-field {
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+    background-color: #fff;
   }
 }
 
 .form-control {
   box-sizing: border-box;
   width: 90%;
-  height: 32px;
   font-size: 14px;
-  border: 1px solid #ccc;
   border-radius: 4px;
   margin-left: 20px;
 }

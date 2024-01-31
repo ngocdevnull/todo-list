@@ -5,4 +5,5 @@ export interface Todo {
   completeByDate: Date;
   isCompleted: boolean;
   priority: number;
+  isHighlight?: boolean;
 }
