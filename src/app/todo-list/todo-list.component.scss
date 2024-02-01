@@ -44,16 +44,6 @@
   text-align: center;
 }
 
-.disable:hover {
-  cursor: not-allowed;
-}
-.disable:active {
-  pointer-events: none;
-}
-.delete-icon.disable {
-  filter: opacity(0.5);
-}
-
 @media screen and (max-width: 980px) {
   .item {
     width: 90vw;

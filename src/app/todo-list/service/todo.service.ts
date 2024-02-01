@@ -2,10 +2,9 @@ import { delay, Observable, of } from 'rxjs';
 
 import { Todo } from '../model/todo.model';
 import { getTodosStorage, setTodosStorage } from '../../shared/storage/todo.storage';
-import {Level} from "../../shared/enums/level.enum";
+import { Level } from '../../shared/enums/level.enum';
 
 export class TodoService {
-
   public getTodos(isReload?: boolean): Observable<Todo[]> {
     let todos = getTodosStorage();
     if (isReload) {
@@ -13,14 +12,9 @@ export class TodoService {
       setTodosStorage(todos);
     }
     todos = [...this.determineItemsHighlight(todos)];
-    todos.sort((a, b) => {
-      return b.priority - a.priority;
-    });
-    return of(
-      todos.sort((a, b) => {
-        return +a.isCompleted - +b.isCompleted;
-      }),
-    ).pipe(delay(2000));
+    todos.sort((a, b) => b.priority - a.priority);
+    const a = todos.sort((a, b) => +a.isCompleted - +b.isCompleted);
+    return of(todos.sort((a, b) => +a.isCompleted - +b.isCompleted)).pipe(delay(2000));
   }
 
   public determineItemsHighlight(todos: Todo[]): Todo[] {

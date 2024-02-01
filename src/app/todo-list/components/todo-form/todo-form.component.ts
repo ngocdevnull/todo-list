@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { Todo } from '../../model/todo.model';
 import { Priority } from '../../model/priority.model';
-import {Level} from "../../../shared/enums/level.enum";
+import { Level } from '../../../shared/enums/level.enum';
 
 @Component({
   selector: 'app-todo-form',
@@ -16,13 +16,13 @@ export class TodoFormComponent {
     summary: new FormControl('', [Validators.required, Validators.maxLength(30)]),
     description: new FormControl(''),
     completeByDate: new FormControl(''),
-    priority: new FormControl(1, Validators.required),
-    isComplete: new FormControl(false),
+    priority: new FormControl(Level.LOW, Validators.required),
+    isCompleted: new FormControl(false),
   });
   public readonly priorities: Priority[] = [
-    { value: Level.LOW, label: 'low' },
-    { value: Level.MEDIUM, label: 'medium' },
-    { value: Level.HIGH, label: 'high' },
+    { value: Level.LOW, label: 'Low' },
+    { value: Level.MEDIUM, label: 'Medium' },
+    { value: Level.HIGH, label: 'High' },
   ];
 
   public submitButtonText: string = '';
@@ -35,14 +35,14 @@ export class TodoFormComponent {
     this.submitButtonText = data.submitButtonText;
   }
 
-  public dateFilter = (date: Date | null): boolean => {
+  public dateFilter(date: Date | null): boolean {
     if (!date) {
       return false;
     }
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
     return date >= currentDate;
-  };
+  }
 
   public onFormSubmit(): void {
     if (this.form.valid) {
