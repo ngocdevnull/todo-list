@@ -44,12 +44,12 @@ export class TodoListComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy() {
-    this.todos$ = this.refetchApiTrigger$.pipe(switchMap(() => this.todoService.getTodos(true)));
+    this.refetchApiTrigger$.unsubscribe()
   }
 
   @HostListener('window:beforeunload', ['$event'])
   public onFilterFinishedItems(): void {
-    this.ngOnDestroy();
+    this.todos$ = this.refetchApiTrigger$.pipe(switchMap(() => this.todoService.getTodos(true)));
   }
 
   public markAsCompleted(todoId: number): void {

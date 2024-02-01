@@ -59,11 +59,6 @@ export class TodoFormComponent {
   }
 
   private setFormValues(todo: Todo): void {
-    this.form.patchValue({
-      summary: todo.summary,
-      description: todo.description,
-      completeByDate: new Date(todo.completeByDate!).toISOString(),
-      priority: todo.priority,
-    });
+    this.form.patchValue(todo);
   }
 }
