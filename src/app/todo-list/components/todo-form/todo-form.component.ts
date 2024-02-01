@@ -2,8 +2,8 @@ import { Component, EventEmitter, Inject } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { Todo } from '../../model/todo.model';
-import { Priority } from '../../model/priority.model';
+import { Todo } from '../../interfaces/todo.interface';
+import { Priority } from '../../interfaces/priority.interface';
 import { Level } from '../../../shared/enums/level.enum';
 
 @Component({
@@ -59,11 +59,6 @@ export class TodoFormComponent {
   }
 
   private setFormValues(todo: Todo): void {
-    this.form.patchValue({
-      summary: todo.summary,
-      description: todo.description,
-      completeByDate: new Date(todo.completeByDate!).toISOString(),
-      priority: todo.priority,
-    });
+    this.form.patchValue(todo);
   }
 }

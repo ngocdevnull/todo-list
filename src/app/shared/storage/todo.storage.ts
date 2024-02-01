@@ -1,4 +1,4 @@
-import { Todo } from '../../todo-list/model/todo.model';
+import { Todo } from '../../todo-list/interfaces/todo.interface';
 import { TODO } from '../constants/constant';
 
 export function setTodosStorage(todos: Todo[]): void {

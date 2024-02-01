@@ -1,11 +1,18 @@
-import { delay, Observable, of } from 'rxjs';
+import {delay, noop, Observable, of} from 'rxjs';
 
-import { Todo } from '../model/todo.model';
+import { Todo } from '../interfaces/todo.interface';
 import { getTodosStorage, setTodosStorage } from '../../shared/storage/todo.storage';
 import { Level } from '../../shared/enums/level.enum';
+import { Router } from '@angular/router';
+import { Injectable } from '@angular/core';
 
+@Injectable()
 export class TodoService {
+  public constructor(private router: Router) {}
   public getTodos(isReload?: boolean): Observable<Todo[]> {
+    if (this.isServerError()) {
+      this.router.navigate(['/server-error']).then(noop);
+    }
     let todos = getTodosStorage();
     if (isReload) {
       todos = todos.filter((i) => !i.isCompleted);
@@ -13,16 +20,7 @@ export class TodoService {
     }
     todos = [...this.determineItemsHighlight(todos)];
     todos.sort((a, b) => b.priority - a.priority);
-    const a = todos.sort((a, b) => +a.isCompleted - +b.isCompleted);
     return of(todos.sort((a, b) => +a.isCompleted - +b.isCompleted)).pipe(delay(2000));
-  }
-
-  public determineItemsHighlight(todos: Todo[]): Todo[] {
-    const today = new Date();
-    return todos.map((i) => {
-      const dayCompleteFromNow = this.convertMsToDay(new Date(i.completeByDate).getTime() - today.getTime());
-      return { ...i, isHighlight: i.priority === Level.HIGH && dayCompleteFromNow <= 0 };
-    });
   }
 
   public createTodo(newTodo: Todo): Observable<Todo[]> {
@@ -77,5 +75,17 @@ export class TodoService {
 
   private convertMsToDay(ms: number): number {
     return Math.floor(ms / (24 * 60 * 60 * 1000));
+  }
+
+  private determineItemsHighlight(todos: Todo[]): Todo[] {
+    const today = new Date();
+    return todos.map((i) => {
+      const dayCompleteFromNow = this.convertMsToDay(new Date(i.completeByDate).getTime() - today.getTime());
+      return { ...i, isHighlight: i.priority === Level.HIGH && dayCompleteFromNow <= 0 };
+    });
+  }
+
+  private isServerError(): boolean {
+    return Math.floor(Math.random() * 20 + 1) === 10;
   }
 }

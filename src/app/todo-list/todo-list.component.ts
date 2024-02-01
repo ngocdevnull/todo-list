@@ -4,7 +4,7 @@ import { BehaviorSubject, distinctUntilChanged, EMPTY, filter, Observable, Repla
 import { map, switchMap } from 'rxjs/operators';
 
 import { TodoService } from './service/todo.service';
-import { Todo } from './model/todo.model';
+import { Todo } from './interfaces/todo.interface';
 import { TodoFormComponent } from './components/todo-form/todo-form.component';
 import { ConfirmDialogComponent } from '../shared/components/confirm-dialog/confirm-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -44,12 +44,12 @@ export class TodoListComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy() {
-    this.todos$ = this.refetchApiTrigger$.pipe(switchMap(() => this.todoService.getTodos(true)));
+    this.refetchApiTrigger$.unsubscribe()
   }
 
   @HostListener('window:beforeunload', ['$event'])
   public onFilterFinishedItems(): void {
-    this.ngOnDestroy();
+    this.todos$ = this.refetchApiTrigger$.pipe(switchMap(() => this.todoService.getTodos(true)));
   }
 
   public markAsCompleted(todoId: number): void {
