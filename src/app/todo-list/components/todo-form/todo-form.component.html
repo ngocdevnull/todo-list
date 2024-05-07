@@ -11,7 +11,13 @@
 
   <mat-form-field>
     <mat-label>Complete by Date:</mat-label>
-    <input matInput [matDatepicker]="picker" formControlName="completeByDate" class="form-control" [matDatepickerFilter]="dateFilter" />
+    <input
+      matInput
+      [matDatepicker]="picker"
+      formControlName="completeByDate"
+      class="form-control"
+      [matDatepickerFilter]="dateFilter"
+    />
     <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>

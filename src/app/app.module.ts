@@ -6,10 +6,11 @@ import { TodoListModule } from './todo-list/todo-list.module';
 import { AppRoutingModule } from './app-routing.module';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { ServerErrorComponent } from './pages/server-error/server-error.component';
+import { LoaderComponent } from './shared/components/loader/loader.component';
 
 @NgModule({
   declarations: [AppComponent, NotFoundComponent, ServerErrorComponent],
-  imports: [BrowserModule, BrowserAnimationsModule, TodoListModule, AppRoutingModule],
-  bootstrap: [AppComponent],
+  imports: [BrowserModule, BrowserAnimationsModule, TodoListModule, AppRoutingModule, LoaderComponent],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}

@@ -4,7 +4,7 @@ import { Component, Input } from '@angular/core';
   selector: 'app-loader',
   standalone: true,
   templateUrl: './loader.component.html',
-  styleUrls: ['./loader.component.scss'],
+  styleUrls: ['./loader.component.scss']
 })
 export class LoaderComponent {
   @Input() public show!: boolean | null;

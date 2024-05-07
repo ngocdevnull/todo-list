@@ -33,12 +33,11 @@ import { MatSelectModule } from '@angular/material/select';
     FormsModule,
     ReactiveFormsModule,
     PriorityPipe,
-    LoaderComponent,
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatSelectModule,
+    MatSelectModule
   ],
-  providers: [TodoService],
+  providers: [TodoService]
 })
 export class TodoListModule {}

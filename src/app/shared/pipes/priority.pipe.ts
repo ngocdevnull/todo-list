@@ -3,7 +3,7 @@ import { Level } from '../enums/level.enum';
 
 @Pipe({
   name: 'priorityPipe',
-  standalone: true,
+  standalone: true
 })
 export class PriorityPipe implements PipeTransform {
   public transform(priority: number): string {

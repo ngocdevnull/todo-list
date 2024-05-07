@@ -1,180 +1,179 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, distinctUntilChanged, EMPTY, filter, Observable, ReplaySubject, shareReplay, tap } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { delay, EMPTY, Observable, ReplaySubject, shareReplay, Subject, takeUntil, tap } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { TodoService } from './service/todo.service';
 import { Todo } from './interfaces/todo.interface';
 import { TodoFormComponent } from './components/todo-form/todo-form.component';
 import { ConfirmDialogComponent } from '../shared/components/confirm-dialog/confirm-dialog.component';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { CREATED, EDIT, ERROR, MARK, MARKTYPE, SUCCESS } from '../shared/constants';
+import { Loading } from '../services/loading.service';
 
 @Component({
   selector: 'app-todo-list',
   templateUrl: './todo-list.component.html',
   styleUrls: ['./todo-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TodoListComponent implements OnInit, OnDestroy {
-  private readonly innerDisabled$ = new BehaviorSubject<boolean>(true);
-  private readonly innerLoading$ = new BehaviorSubject<boolean>(false);
+  private refetchApiTrigger$ = new ReplaySubject<void>(1);
+  private destroy$ = new Subject<void>();
 
   public todos$!: Observable<Todo[]>;
-  public refetchApiTrigger$ = new ReplaySubject<void>(1);
-  public isDisabled$: Observable<boolean> = this.innerDisabled$.asObservable();
-  public isLoading$: Observable<boolean> = this.innerLoading$.asObservable();
+
+  protected readonly MARKTYPE = MARKTYPE;
 
   public constructor(
     private todoService: TodoService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private loadingService: Loading
   ) {}
 
   public ngOnInit(): void {
-    this.todos$ = this.refetchApiTrigger$.pipe(
-      switchMap(() => this.todoService.getTodos()),
-      map((data) => data),
-      shareReplay(1),
-      distinctUntilChanged(),
-      tap(() => {
-        this.innerDisabled$.next(false);
-        this.innerLoading$.next(false);
-      }),
-    );
+    this.setupTodoStream();
+
     this.refetchApiTrigger$.next();
   }
 
-  public ngOnDestroy() {
-    this.refetchApiTrigger$.unsubscribe()
+  public ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  @HostListener('window:beforeunload', ['$event'])
-  public onFilterFinishedItems(): void {
-    this.todos$ = this.refetchApiTrigger$.pipe(switchMap(() => this.todoService.getTodos(true)));
-  }
-
-  public markAsCompleted(todoId: number): void {
+  public mark(todoId: number, type: string): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: { text: 'mark as finish' },
+      data: { text: type === MARKTYPE.completed ? MARK.UNFINISHED : MARK.FINISHED }
     });
 
     dialogRef
       .afterClosed()
       .pipe(
-        switchMap((result) => {
-          this.innerLoading$.next(result);
-          return result ? this.todoService.markAsCompleted(todoId) : EMPTY;
+        tap(result => {
+          if (result) {
+            this.loadingService.open();
+          }
         }),
+        delay(2000),
+        switchMap(result => {
+          if (result) {
+            this.loadingService.open();
+          }
+          return result
+            ? type === MARKTYPE.completed
+              ? this.todoService.markAsUnfinished(todoId)
+              : this.todoService.markAsCompleted(todoId)
+            : EMPTY;
+        })
       )
       .subscribe({
         next: () => this.refetchApiTrigger$.next(),
-        error: () => this.innerLoading$.next(false),
-      });
-  }
-
-  public markAsUnfinished(todoId: number): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: { text: 'mark as unfinished' },
-    });
-
-    dialogRef
-      .afterClosed()
-      .pipe(
-        switchMap((result) => {
-          this.innerLoading$.next(result);
-          return result ? this.todoService.markAsUnfinished(todoId) : EMPTY;
-        }),
-      )
-      .subscribe({
-        next: () => this.refetchApiTrigger$.next(),
-        error: () => this.innerLoading$.next(false),
+        error: () => this.loadingService.close()
       });
   }
 
   public createTodo(): void {
     const dialogRef = this.dialog.open(TodoFormComponent, { data: { submitButtonText: 'Create' } });
 
-    dialogRef.componentInstance.formValueEmitter
+    dialogRef
+      .afterClosed()
       .pipe(
-        switchMap((result) => {
-          if (result) {
-            this.innerLoading$.next(true);
-            return this.todoService.createTodo(result);
-          } else {
-            return EMPTY;
+        tap(data => {
+          if (data) {
+            this.loadingService.open();
           }
         }),
+        delay(2000),
+        switchMap(result => this.todoService.createTodo(result)),
+        takeUntil(this.destroy$)
       )
       .subscribe({
         next: () => {
-          this.openSnackBar('Todo created successfully', 'success');
-          dialogRef.close();
-          this.innerLoading$.next(false);
+          this.loadingService.close();
+          this.openSnackBar(CREATED.SUCCESSFULLY, SUCCESS);
         },
         error: () => {
-          this.openSnackBar('Failed to create todo', 'error');
-          this.innerLoading$.next(false);
-        },
+          this.loadingService.close();
+          this.openSnackBar(CREATED.FAILED, ERROR);
+        }
       });
-
-    dialogRef.afterClosed().subscribe({
-      next: () => this.refetchApiTrigger$.next(),
-    });
   }
 
   public editTodo(todo: Todo): void {
     const dialogRef = this.dialog.open(TodoFormComponent, {
-      data: { todo, submitButtonText: 'Edit' },
-    });
-
-    dialogRef.componentInstance.formValueEmitter
-      .pipe(
-        switchMap((result) => {
-          if (result) {
-            this.innerLoading$.next(true);
-            return this.todoService.editTodo(todo.id, result);
-          } else {
-            return EMPTY;
-          }
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.openSnackBar('Edit successfully', 'success');
-          dialogRef.close();
-          this.innerLoading$.next(false);
-        },
-        error: () => {
-          this.openSnackBar('Edit failed', 'error');
-          this.innerLoading$.next(false);
-        },
-      });
-
-    dialogRef.afterClosed().subscribe({ next: () => this.refetchApiTrigger$.next() });
-  }
-
-  public openPopConfirm(todoId: number): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: { text: 'delete' },
+      data: { todo, submitButtonText: 'Edit' }
     });
 
     dialogRef
       .afterClosed()
       .pipe(
-        switchMap((result) => {
-          this.innerLoading$.next(result);
-          return result ? this.todoService.deleteTodo(todoId) : EMPTY;
+        tap(data => {
+          if (data) {
+            this.loadingService.open();
+          }
         }),
+        delay(2000),
+        switchMap(result => {
+          return this.todoService.editTodo(todo.id, result);
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
+          this.loadingService.close();
+          this.openSnackBar(EDIT.SUCCESSFULLY, SUCCESS);
+        },
+        error: () => {
+          this.loadingService.close();
+          this.openSnackBar(EDIT.FAILED, ERROR);
+        }
+      });
+  }
+
+  public openPopConfirm(todoId: number): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: { text: 'delete' }
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(
+        tap(result => {
+          if (result) {
+            this.loadingService.open();
+          }
+        }),
+        delay(2000),
+        switchMap(result => {
+          if (result) {
+            this.loadingService.open();
+          }
+          return result ? this.todoService.deleteTodo(todoId) : EMPTY;
+        })
       )
       .subscribe({
         next: () => this.refetchApiTrigger$.next(),
-        error: () => this.innerLoading$.next(false),
+        error: () => this.loadingService.close()
       });
   }
 
   private openSnackBar(mes: string, type: string): void {
     this.snackBar.open(mes, 'Close', {
       duration: 3000,
-      panelClass: `${type}-toast`,
+      panelClass: `${type}-toast`
     });
+  }
+
+  private setupTodoStream(): void {
+    this.todos$ = this.refetchApiTrigger$.pipe(
+      switchMap(() => this.todoService.getTodos()),
+      shareReplay(1),
+      takeUntil(this.destroy$),
+      tap(() => {
+        this.loadingService.close();
+      })
+    );
   }
 }
